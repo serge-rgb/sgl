@@ -7,10 +7,13 @@ Feature list
 ------------
 None! I just created the repo. Feel free to follow the repo so that I can have glory and perhaps finally find happiness
 ### Planned features.
-1. `Maybe<T>`, my personal nod to haskell's sexy type system.
-2. Stretchy array (substitute for std::vector)
-3. String class.
-3. Modern OpenGL helpers (It would be nice to draw a triangle to the screen using less than 1000 lines)
+* NonCopyable base class.
+* `Maybe<T>`, my small nod to haskell's sexy type system.
+* Stretchy array (substitute for std::vector)
+* String class.
+* Smart scoped pointer
+* Modern OpenGL helpers (It would be nice to draw a triangle to the screen using less than 1000 lines)
+* Refcounted pointer
 
 Purposes
 --------
@@ -48,4 +51,4 @@ In order of importance:
 5. RAII is the nicest thing that came out of C++. Use it for every resource that needs management.
 6. Use reference counting for resources that *really* need management.
 7. Data: Binary formats with text translators, or text format with compilation.
-8. Don't be afraid to copy and paste from other MIT-like licensed codebases.
+8. Don't be afraid to copy and paste from other MIT-like licensed codebases if I don't want to reinvent a particular wheel.
