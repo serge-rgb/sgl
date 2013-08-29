@@ -29,7 +29,7 @@ Motivations
 
 Manifesto
 ---------
-I am inspired by Sean Barretts (nothings) and the style of this code is an emulation of his.
+I am inspired by Sean Barrett (aka nothings) and the style of this code is an emulation of his.
 There are a lot of differences though, namely my lesser skill.
 I mostly agree with Google's public C++ guidelines, with the following differences:
 ###Naming
