@@ -6,6 +6,7 @@ This is my own C++ standard library. MIT licensed. Things may explode.
 Feature list
 ------------
 None! I just created the repo. Feel free to follow the repo so that I can have glory and perhaps finally find happiness
+
 ### Planned features.
 * NonCopyable base class.
 * `Maybe<T>`, my small nod to haskell's sexy type system.
@@ -28,8 +29,8 @@ Motivations
 
 Manifesto
 ---------
-I am inspired by Sean Barretts (nothings) and the style of this code is an emulation of his. 
-There are a lot of differences though, namely my lesser skill. 
+I am inspired by Sean Barretts (nothings) and the style of this code is an emulation of his.
+There are a lot of differences though, namely my lesser skill.
 I mostly agree with Google's public C++ guidelines, with the following differences:
 ###Naming
 ```
