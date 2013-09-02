@@ -94,7 +94,7 @@ private:
  * Vector class designed to be faster than std::vector
  */
 template <typename T>
-class Vector : public Noncopyable {
+class Vector {
     public:
         Vector() {
         }
@@ -103,24 +103,17 @@ class Vector : public Noncopyable {
          * Adds count elements.
          */
         Vector(size_t count) {
-            /**
-             * TODO: smart allocation.
-             */
             m_storage = new T[count];
             m_count = count;
-            m_num_elements = count;
         }
         T& operator[](size_t index) {
-            sgl_assert(index < m_count);
             return m_storage[index];
         }
-        T* begin() const { return m_storage; }
-        T* end() const { return &m_storage[m_count - 1]; }
     private:
         T* m_storage;
-        size_t m_num_elements;
         size_t m_count;
 };
+
 
 }  // namespace sgl
 
