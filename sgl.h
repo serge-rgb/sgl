@@ -81,16 +81,37 @@ public:
      * Make sure to call IsValid() to guarantee that this isn't garbabe.
      */
     const T& value() const {
-#ifdef SGL_DEBUG
         sgl_assert(m_is_valid);
-#endif
         return m_value;
-
     }
 
 private:
     T m_value;
     bool m_is_valid;
+};
+
+/**
+ * Vector class designed to be faster than std::vector
+ */
+template <typename T>
+class Vector {
+    public:
+        Vector() {
+        }
+        /**
+         * Allocates space for at least count elements.
+         * Adds count elements.
+         */
+        Vector(size_t count) {
+            m_storage = new T[count];
+            m_count = count;
+        }
+        T& operator[](size_t index) {
+            return m_storage[index];
+        }
+    private:
+        T* m_storage;
+        size_t m_count;
 };
 
 
