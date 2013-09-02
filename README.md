@@ -29,10 +29,14 @@ Motivations
 
 Manifesto
 ---------
-I am inspired by Sean Barrett (nothings) and the style of this code is an emulation of his.
+I am inspired by Sean Barrett (aka nothings) and the style of this code is an emulation of his.
 There are a lot of differences though, namely my lesser skill.
+
+###Coding Style:
+
 I mostly agree with Google's public C++ guidelines, with the following differences:
-###Naming
+
+####Naming
 ```
 ClassName
 function_name()
