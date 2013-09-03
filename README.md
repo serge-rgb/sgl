@@ -5,12 +5,11 @@ This is my own C++ standard library. MIT licensed. Things may explode.
 
 Feature list
 ------------
-None! I just created the repo. Feel free to follow the repo so that I can have glory and perhaps finally find happiness
-
-### Planned features.
 * NonCopyable base class.
 * `Maybe<T>`, my small nod to haskell's sexy type system.
 * Stretchy array (substitute for std::vector)
+
+### Planned features.
 * String class.
 * Smart scoped pointer
 * Modern OpenGL helpers (It would be nice to draw a triangle to the screen using less than 1000 lines)
