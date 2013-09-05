@@ -99,7 +99,7 @@ size_t cache_line_size()  {
     buffer = (SYSTEM_LOGICAL_PROCESSOR_INFORMATION*) malloc(buffer_size);
     GetLogicalProcessorInformation(&buffer[0], &buffer_size);
     for (DWORD i = 0; i != buffer_size / sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION); ++i) {
-        if (buffer[i].Relationship == RelationCache && buffer[i].Cache.Level == 1) {
+        if (buffer && buffer[i].Relationship == RelationCache && buffer[i].Cache.Level == 1) {
             size = buffer[i].Cache.LineSize;
             break;
         }
