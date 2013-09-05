@@ -178,6 +178,7 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 /**
  * Vector class designed to be faster than std::vector
+ * Windows: push_back is faster in general but really kicks ass as the size grows.
  */
 template <typename T>
 class Vector {
@@ -216,6 +217,11 @@ class Vector {
                 m_storage = new_storage;
             }
             m_storage[m_num_elements - 1] = e;
+        }
+
+        void resize(size_t num_elements) {
+            sgl_expect(num_elements <= m_num_elements);
+            m_num_elements = num_elements;
         }
 
         virtual ~Vector() {
