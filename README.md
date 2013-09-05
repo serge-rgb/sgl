@@ -8,10 +8,10 @@ Feature list
 * NonCopyable base class.
 * `Maybe<T>`, my small nod to haskell's sexy type system.
 * Stretchy array (substitute for std::vector)
+* Scoped pointer
 
 ### Planned features.
 * String class.
-* Smart scoped pointer
 * Modern OpenGL helpers (It would be nice to draw a triangle to the screen using less than 1000 lines)
 * Refcounted pointer
 

@@ -25,9 +25,16 @@
 #ifndef SGL_H_DEFINED
 #define SGL_H_DEFINED
 
+// C includes
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+
+// C++ includes
+#if defined(SGL_USE_INITIALIZER_LISTS)
+#include <initializer_list>
+#endif
+
 #if defined(_WIN32)
 #include <windows.h>
 #endif
@@ -137,7 +144,7 @@ class Printable {
 };
 
 /**
- * Class to kill NULL usage
+ * Class to avoid exceptions and prevent NULL usage.
  *
  * Example:
  *
@@ -145,8 +152,10 @@ class Printable {
  * ...
  * Maybe<int> i = parse_this_int(const string &str);
  *
- * if (x.valid()) {
- *     foo(x.value());
+ * if (i.valid()) {
+ *     use_int(i.value());
+ * } else {
+ *     // handle parse error.
  * }
  */
 template <typename T>
@@ -155,11 +164,17 @@ public:
     Maybe() : m_is_valid(false) {}
     Maybe(const T& that) : m_value(that), m_is_valid(true) {}
     Maybe(const Maybe &that) : m_value(that.m_value), m_is_valid(that.m_is_valid) {}
+    Maybe<T>& operator=(const Maybe<T>& that) {
+        this->m_is_valid = that.m_is_valid;
+        this->m_value = that.m_value;
+        return *this;
+    }
 
     bool valid() const { return m_is_valid; }
 
     /**
-     * Make sure to call valid() to guarantee that this isn't garbabe.
+     * Usage:
+     * if (m.valid()) some_function(m.value());
      */
     const T& value() const {
         sgl_assert(m_is_valid);
@@ -167,7 +182,6 @@ public:
     }
 
 private:
-    Maybe<T>& operator=(const Maybe<T>&);
     T m_value;
     bool m_is_valid;
 };
@@ -197,6 +211,11 @@ class Vector {
             m_size = line_size * (1 + (((reserve * type_size) - 1) / line_size));
             m_storage = new T[m_size];
         }
+#if defined(SGL_USE_INITIALIZER_LISTS)
+        Vector(std::initializer_list<T> list) {
+            // TODO: implement this with a compiler that supports it...
+        }
+#endif
 
         T& operator[](size_t index) {
             sgl_assert(index < m_num_elements);
@@ -238,6 +257,65 @@ class Vector {
 };
 template <typename T>
 size_t Vector<T>::m_factor = 2;
+
+/**
+ * Simple scoped pointers. Call delete and delete[] respectively.
+ */
+template<typename T>
+class AutoDelete {
+    public:
+    AutoDelete(T* ptr) : m_ptr(ptr) {}
+    AutoDelete(const T* ptr) : m_ptr(ptr) {}
+
+    T& operator*() const { return *m_ptr; }
+    T* operator->() const { return m_ptr; }
+
+    T* get() const { m_ptr; }
+
+    T* detach() {
+        T* detached = m_ptr;
+        m_ptr = NULL;
+        return detached;
+    }
+private:
+    AutoDelete() {}
+    AutoDelete(T) {}
+    T* m_ptr;
+
+public:
+    virtual ~AutoDelete() {
+        if (m_ptr) {
+            delete m_ptr;
+        }
+    }
+};
+template<typename T>
+class AutoDeleteArray {
+    public:
+    AutoDeleteArray(T* ptr) : m_ptr(ptr) {}
+    AutoDeleteArray(const T* ptr) : m_ptr(ptr) {}
+
+    T& operator*() const { return *m_ptr; }
+    T* operator->() const { return m_ptr; }
+
+    T* get() const { m_ptr; }
+
+    T* detach() {
+        T* detached = m_ptr;
+        m_ptr = NULL;
+        return detached;
+    }
+private:
+    AutoDeleteArray() {}
+    AutoDeleteArray(T) {}
+    T* m_ptr;
+public:
+    virtual ~AutoDeleteArray() {
+        if (m_ptr) {
+            delete[] m_ptr;
+        }
+    }
+};
 
 }  // namespace sgl
 ////////////////////////////////////////////////////////////////////////////////
