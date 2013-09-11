@@ -31,9 +31,7 @@
 #include <stdlib.h>
 
 // C++ includes
-#if defined(SGL_USE_INITIALIZER_LISTS)
 #include <initializer_list>
-#endif
 
 #if defined(_WIN32)
 #include <windows.h>
@@ -185,78 +183,6 @@ private:
     T m_value;
     bool m_is_valid;
 };
-////////////////////////////////////////////////////////////////////////////////
-
-////////////////////////////////////////////////////////////////////////////////
-// Generic data structures
-////////////////////////////////////////////////////////////////////////////////
-/**
- * Vector class designed to be faster than std::vector
- * Windows: push_back is faster in general but really kicks ass as the size grows.
- */
-template <typename T>
-class Vector {
-    public:
-        /**
-         * Allocates space for at least num elements.
-         */
-        explicit Vector(size_t reserve) :
-            m_num_elements(0) {
-            sgl_assert(reserve > 0);
-            // Compute an array size that is a multiple of the cache line size.
-            size_t line_size = cache_line_size();
-            size_t type_size = sizeof(T);
-            // Ceiling division of positive numbers:
-            // line_size * ceil(reserve * type_size / line_size)
-            m_size = line_size * (1 + (((reserve * type_size) - 1) / line_size));
-            m_storage = new T[m_size];
-        }
-#if defined(SGL_USE_INITIALIZER_LISTS)
-        Vector(std::initializer_list<T> list) {
-            // TODO: implement this with a compiler that supports it...
-        }
-#endif
-
-        T& operator[](size_t index) {
-            sgl_assert(index < m_num_elements);
-            return m_storage[index];
-        }
-
-        T* begin() const { return &m_storage[0]; }
-        T* end() const { return &m_storage[0] + m_num_elements; }
-
-        // TODO: make thread safe.
-        void push_back(const T& e) {
-            m_num_elements++;
-            if (m_num_elements * sizeof(T) > m_size) {  // Stretch
-                m_size *= m_factor;
-                T* new_storage = new T[m_size];
-                memcpy(new_storage, m_storage, (m_num_elements - 1) * sizeof(T));
-                delete[] m_storage;
-                m_storage = new_storage;
-            }
-            m_storage[m_num_elements - 1] = e;
-        }
-
-        void resize(size_t num_elements) {
-            sgl_expect(num_elements <= m_num_elements);
-            m_num_elements = num_elements;
-        }
-
-        virtual ~Vector() {
-            if (m_storage) {
-                delete[] m_storage;
-            }
-        }
-
-    private:
-        T* m_storage;
-        size_t m_num_elements;
-        size_t m_size;
-        static size_t m_factor;  // How much do we resize the array when stretching.
-};
-template <typename T>
-size_t Vector<T>::m_factor = 2;
 
 /**
  * Simple scoped pointers. Call delete and delete[] respectively.
@@ -316,6 +242,81 @@ public:
         }
     }
 };
+
+////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+// Generic data structures
+////////////////////////////////////////////////////////////////////////////////
+/**
+ * Vector class designed to be faster than std::vector
+ * Windows: push_back is faster in general but really kicks ass as the size grows.
+ */
+template <typename T>
+class Vector {
+    public:
+        /**
+         * Allocates space for at least num elements.
+         */
+        explicit Vector(size_t reserve) :
+            m_num_elements(0) {
+            sgl_assert(reserve > 0);
+            // Compute an array size that is a multiple of the cache line size.
+            size_t line_size = cache_line_size();
+            size_t type_size = sizeof(T);
+            // Ceiling division of positive numbers:
+            // line_size * ceil(reserve * type_size / line_size)
+            m_size = line_size * (1 + (((reserve * type_size) - 1) / line_size));
+            m_storage = new T[m_size];
+        }
+
+#if defined(SGL_USE_INITIALIZER_LISTS)
+        Vector(std::initializer_list<T> list) {
+            // TODO: implement this with a compiler that supports it...
+        }
+#endif
+
+        T& operator[](size_t index) {
+            sgl_assert(index < m_num_elements);
+            return m_storage[index];
+        }
+
+        T* begin() const { return &m_storage[0]; }
+        T* end() const { return &m_storage[0] + m_num_elements; }
+
+        // TODO: make thread safe.
+        void push_back(const T& e) {
+            m_num_elements++;
+            if (m_num_elements * sizeof(T) > m_size) {  // Stretch
+                m_size *= m_factor;
+                T* new_storage = new T[m_size];
+                memcpy(new_storage, m_storage, (m_num_elements - 1) * sizeof(T));
+                delete[] m_storage;
+                m_storage = new_storage;
+            }
+            m_storage[m_num_elements - 1] = e;
+        }
+
+        void resize(size_t num_elements) {
+            sgl_expect(num_elements <= m_num_elements);
+            m_num_elements = num_elements;
+        }
+
+        virtual ~Vector() {
+            if (m_storage) {
+                delete[] m_storage;
+            }
+        }
+
+    private:
+        T* m_storage;
+        size_t m_num_elements;
+        size_t m_size;
+        static size_t m_factor;  // How much do we resize the array when stretching.
+};
+template <typename T>
+size_t Vector<T>::m_factor = 2;
+
 
 }  // namespace sgl
 ////////////////////////////////////////////////////////////////////////////////
