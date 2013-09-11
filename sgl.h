@@ -1,26 +1,26 @@
 /**
- * The MIT License (MIT)
- *
- * Copyright (c) 2013 Sergio Gonzalez
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
+* The MIT License (MIT)
+*
+* Copyright (c) 2013 Sergio Gonzalez
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+*
+* The above copyright notice and this permission notice shall be included in
+* all copies or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+* THE SOFTWARE.
+*/
 
 #ifndef SGL_H_DEFINED
 #define SGL_H_DEFINED
@@ -45,17 +45,17 @@
 #ifdef SGL_DEBUG
 #ifndef sgl_assert
 #define sgl_assert(expr) \
-    if (!(expr)) { \
-        printf("%s:%d:0 Error: Assertion " #expr " failed\n", __FILE__, __LINE__);\
-        exit(-1);\
-    }
+if (!(expr)) { \
+    printf("%s:%d:0 Error: Assertion " #expr " failed\n", __FILE__, __LINE__);\
+    exit(-1);\
+}
 #endif  // ifndef assert
 
 #ifndef sgl_expect
 #define sgl_expect(expr) \
-    if (!(expr)) { \
-        printf("%s:%d:0 Warning: Expected " #expr ".\n", __FILE__, __LINE__);\
-    }
+if (!(expr)) { \
+    printf("%s:%d:0 Warning: Expected " #expr ".\n", __FILE__, __LINE__);\
+}
 #endif
 #else // Release:
 #ifndef sgl_assert
@@ -67,6 +67,7 @@
 #endif // ifdef SGL_DEBUG
 
 namespace sgl {
+
 ////////////////////////////////////////////////////////////////////////////////
 // Math functions.
 ////////////////////////////////////////////////////////////////////////////////
@@ -88,9 +89,9 @@ int64_t lcm(int64_t a, int64_t b) {
 ////////////////////////////////////////////////////////////////////////////////
 
 /*
- * Get the size of o L1 cache line.
- * Returns 0 for platforms not yet supported.
- */
+* Get the size of o L1 cache line.
+* Returns 0 for platforms not yet supported.
+*/
 size_t cache_line_size()  {
 #if defined(_WIN32)
     static size_t memoized_size = 0;
@@ -113,7 +114,6 @@ size_t cache_line_size()  {
     memoized_size = size;
     return size;
 #endif
-    return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -121,6 +121,7 @@ size_t cache_line_size()  {
 ////////////////////////////////////////////////////////////////////////////////
 // Safety first:
 ////////////////////////////////////////////////////////////////////////////////
+
 /*
  * Base non-copyable class.
  */
@@ -261,20 +262,18 @@ class Vector {
         explicit Vector(size_t reserve) :
             m_num_elements(0) {
             sgl_assert(reserve > 0);
-            // Compute an array size that is a multiple of the cache line size.
-            size_t line_size = cache_line_size();
-            size_t type_size = sizeof(T);
-            // Ceiling division of positive numbers:
-            // line_size * ceil(reserve * type_size / line_size)
-            m_size = line_size * (1 + (((reserve * type_size) - 1) / line_size));
+            m_size = friendly_array_size(reserve);
             m_storage = new T[m_size];
         }
 
-#if defined(SGL_USE_INITIALIZER_LISTS)
-        Vector(std::initializer_list<T> list) {
-            // TODO: implement this with a compiler that supports it...
+        Vector(std::initializer_list<T> list) : m_num_elements(0) {
+            sgl_assert(list.size() > 0);
+            m_size = friendly_array_size(list.size());
+            m_storage = new T[m_size];
+            for (const auto e : list) {
+                this->push_back(e);
+            }
         }
-#endif
 
         T& operator[](size_t index) {
             sgl_assert(index < m_num_elements);
@@ -284,7 +283,6 @@ class Vector {
         T* begin() const { return &m_storage[0]; }
         T* end() const { return &m_storage[0] + m_num_elements; }
 
-        // TODO: make thread safe.
         void push_back(const T& e) {
             m_num_elements++;
             if (m_num_elements * sizeof(T) > m_size) {  // Stretch
@@ -295,6 +293,15 @@ class Vector {
                 m_storage = new_storage;
             }
             m_storage[m_num_elements - 1] = e;
+        }
+
+        Vector<T>& operator= (const Vector<T>& other) {
+            if (m_size < other.m_size) {
+                if (m_storage) delete[] m_storage;
+                m_storage = new T[other.m_size];
+            }
+            memcpy(m_storage, other.m_storage, other.m_size);
+            m_size = other.m_size;
         }
 
         void resize(size_t num_elements) {
@@ -308,7 +315,15 @@ class Vector {
             }
         }
 
-    private:
+    protected:
+        inline size_t friendly_array_size(size_t min_num) {
+            // Compute an array size that is a multiple of the cache line size.
+            size_t line_size = cache_line_size();
+            size_t type_size = sizeof(T);
+            // Ceiling division of positive numbers:
+            // line_size * ceil(min_num * type_size / line_size)
+            return line_size * (1 + (((min_num * type_size) - 1) / line_size));
+        }
         T* m_storage;
         size_t m_num_elements;
         size_t m_size;
@@ -317,6 +332,31 @@ class Vector {
 template <typename T>
 size_t Vector<T>::m_factor = 2;
 
+/**
+ * Funcional-style string class
+ * I expect this to be really slow without heavy compiler help, and even then..
+ */
+class String : public Vector<char> {
+    public:
+        String() : Vector<char>(1) {
+            m_storage[0] = '\0';
+        }
+        String(const char* str) : Vector(strlen(str) + 1) {
+            memcpy(m_storage, str, strlen(str));
+            m_num_elements = strlen(str);
+            m_storage[m_num_elements] = '\0';
+        }
+
+        String appended(const String& other) {
+            // TODO: How the fuck?
+        }
+
+        const char* str() const {
+            return m_storage;
+        }
+    private:
+        explicit String(size_t size) : Vector(size) { m_storage[0] = '\0'; }
+};
 
 }  // namespace sgl
 ////////////////////////////////////////////////////////////////////////////////

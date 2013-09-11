@@ -11,3 +11,12 @@
 *.lai
 *.la
 *.a
+
+test/Release/*
+test/Debug/*
+*.opensdf
+*.sdf
+*.sln
+*.filters
+*.user
+*.suo
