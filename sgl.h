@@ -255,107 +255,128 @@ public:
  */
 template <typename T>
 class Vector {
-    public:
-        /**
-         * Allocates space for at least num elements.
-         */
-        explicit Vector(size_t reserve) :
-            m_num_elements(0) {
-            sgl_assert(reserve > 0);
-            m_size = friendly_array_size(reserve);
-            m_storage = new T[m_size];
-        }
+public:
+    /**
+     * Allocates space for at least num elements.
+     */
+    explicit Vector(size_t reserve) :
+        m_num_elements(0) {
+        sgl_assert(reserve > 0);
+        m_size = friendly_array_size(reserve);
+        m_storage = new T[m_size];
+    }
 
-        Vector(std::initializer_list<T> list) : m_num_elements(0) {
-            sgl_assert(list.size() > 0);
-            m_size = friendly_array_size(list.size());
-            m_storage = new T[m_size];
-            for (const auto e : list) {
-                this->push_back(e);
-            }
+    Vector(std::initializer_list<T> list) : m_num_elements(0) {
+        sgl_assert(list.size() > 0);
+        m_size = friendly_array_size(list.size());
+        m_storage = new T[m_size];
+        for (const auto e : list) {
+            this->push_back(e);
         }
+    }
 
-        T& operator[](size_t index) {
-            sgl_assert(index < m_num_elements);
-            return m_storage[index];
+    Vector(const Vector<T>& other) {
+        this->m_size = other.m_size;
+        this->m_num_elements = other.m_num_elements;
+        if (this->m_storage) {
+            delete m_storage;
         }
+        this->m_storage = new T[m_size];
+        memcpy(m_storage, other.m_storage, other.m_size);
+    }
 
-        T* begin() const { return &m_storage[0]; }
-        T* end() const { return &m_storage[0] + m_num_elements; }
+    T& operator[](size_t index) {
+        sgl_assert(index < m_num_elements);
+        return m_storage[index];
+    }
 
-        void push_back(const T& e) {
-            m_num_elements++;
-            if (m_num_elements * sizeof(T) > m_size) {  // Stretch
-                m_size *= m_factor;
-                T* new_storage = new T[m_size];
-                memcpy(new_storage, m_storage, (m_num_elements - 1) * sizeof(T));
-                delete[] m_storage;
-                m_storage = new_storage;
-            }
-            m_storage[m_num_elements - 1] = e;
+    T* begin() const { return &m_storage[0]; }
+    T* end() const { return &m_storage[0] + m_num_elements; }
+
+    void push_back(const T& e) {
+        m_num_elements++;
+        if (m_num_elements * sizeof(T) > m_size) {  // Stretch
+            m_size *= m_factor;
+            T* new_storage = new T[m_size];
+            memcpy(new_storage, m_storage, (m_num_elements - 1) * sizeof(T));
+            delete[] m_storage;
+            m_storage = new_storage;
         }
+        m_storage[m_num_elements - 1] = e;
+    }
 
-        Vector<T>& operator= (const Vector<T>& other) {
-            if (m_size < other.m_size) {
-                if (m_storage) delete[] m_storage;
-                m_storage = new T[other.m_size];
-            }
-            memcpy(m_storage, other.m_storage, other.m_size);
-            m_size = other.m_size;
+    Vector<T>& operator= (const Vector<T>& other) {
+        if (m_size < other.m_size) {
+            if (m_storage) delete[] m_storage;
+            m_storage = new T[other.m_size];
         }
+        memcpy(m_storage, other.m_storage, other.m_size);
+        m_size = other.m_size;
+    }
 
-        void resize(size_t num_elements) {
-            sgl_expect(num_elements <= m_num_elements);
-            m_num_elements = num_elements;
-        }
+    void resize(size_t num_elements) {
+        sgl_expect(num_elements <= m_num_elements);
+        m_num_elements = num_elements;
+    }
 
-        virtual ~Vector() {
-            if (m_storage) {
-                delete[] m_storage;
-            }
+    virtual ~Vector() {
+        if (m_storage) {
+            delete[] m_storage;
         }
+    }
 
-    protected:
-        inline size_t friendly_array_size(size_t min_num) {
-            // Compute an array size that is a multiple of the cache line size.
-            size_t line_size = cache_line_size();
-            size_t type_size = sizeof(T);
-            // Ceiling division of positive numbers:
-            // line_size * ceil(min_num * type_size / line_size)
-            return line_size * (1 + (((min_num * type_size) - 1) / line_size));
-        }
-        T* m_storage;
-        size_t m_num_elements;
-        size_t m_size;
-        static size_t m_factor;  // How much do we resize the array when stretching.
+protected:
+    inline size_t friendly_array_size(size_t min_num) {
+        // Compute an array size that is a multiple of the cache line size.
+        size_t line_size = cache_line_size();
+        size_t type_size = sizeof(T);
+        // Ceiling division of positive numbers:
+        // line_size * ceil(min_num * type_size / line_size)
+        return line_size * (1 + (((min_num * type_size) - 1) / line_size));
+    }
+    T* m_storage;
+    size_t m_num_elements;
+    size_t m_size;
+    static size_t m_factor;  // How much do we resize the array when stretching.
 };
 template <typename T>
 size_t Vector<T>::m_factor = 2;
 
 /**
- * Funcional-style string class
+ * Functional-style string class
  * I expect this to be really slow without heavy compiler help, and even then..
  */
 class String : public Vector<char> {
-    public:
-        String() : Vector<char>(1) {
-            m_storage[0] = '\0';
-        }
-        String(const char* str) : Vector(strlen(str) + 1) {
-            memcpy(m_storage, str, strlen(str));
-            m_num_elements = strlen(str);
-            m_storage[m_num_elements] = '\0';
-        }
+public:
+    String() : Vector<char>(1) {
+        m_storage[0] = '\0';
+    }
+    
+    String(const char* str) : Vector(strlen(str) + 1) {
+        memcpy(m_storage, str, strlen(str));
+        m_num_elements = strlen(str);
+        m_storage[m_num_elements] = '\0';
+    }
 
-        String appended(const String& other) {
-            // TODO: How the fuck?
-        }
+    String(const String& other) : Vector(other) { }
 
-        const char* str() const {
-            return m_storage;
-        }
-    private:
-        explicit String(size_t size) : Vector(size) { m_storage[0] = '\0'; }
+    String& operator= (const String& other) {
+        this->operator=(other);
+    }
+
+    String appended(const String& other) {
+        const size_t new_storage = this->m_num_elements + other.m_num_elements;
+        String new_string(new_storage);
+        new_string.m_num_elements = this->m_num_elements + other.m_num_elements;
+        sprintf(new_string.m_storage, "%s%s", this->m_storage, other.m_storage);
+        return new_string;
+    }
+
+    const char* str() const {
+        return m_storage;
+    }
+private:
+    explicit String(size_t size) : Vector(size) { m_storage[0] = '\0'; }
 };
 
 }  // namespace sgl
