@@ -3,19 +3,26 @@
 
 #include "../sgl.h"
 
+#if defined(_WIN32)
 #include <tchar.h>
+#endif
+
 #include <vector>  // For shootout purposes.
 
 int get_random_int() {
     return 4;
 }
 
+#if defined(_WIN32)
 #define BENCHMARK(expr) { \
     LARGE_INTEGER before, after; \
     QueryPerformanceCounter(&before); \
     (expr); \
     QueryPerformanceCounter(&after); \
     printf("Measure " #expr ": %ld\n", after.QuadPart - before.QuadPart); \
+}
+#endif
+#define BENCHMARK(expr) { \
 }
 
 void stress_stl_vector(int reserve, int times) {
@@ -36,7 +43,11 @@ void stress_sgl_vector(int reserve, int times) {
     }
 }
 
+#if defined(_WIN32)
 int _tmain(int argc, _TCHAR* argv[])
+#else
+int main(int argc, char** argv)
+#endif
 {
     printf("Hello World\n");
 #ifdef SGL_DEBUG
@@ -98,7 +109,7 @@ int _tmain(int argc, _TCHAR* argv[])
 #endif
 
     {
-        sgl::AutoDelete<sgl::Vector<int>> ad(new sgl::Vector<int>(1));
+        sgl::ScopedPtr<sgl::Vector<int>> ad(new sgl::Vector<int>(1));
         ad->push_back(42);
         sgl_expect((*ad)[0] == 42);
     }
@@ -117,7 +128,7 @@ int _tmain(int argc, _TCHAR* argv[])
         sgl::String s = "Hello World!";
         printf("Hello string: [%s]\n", s.str());
     }
- 
+
     {
         sgl::String a = sgl::String("Hello, ").appended("appended World!");
         printf("%s\n", a.str());

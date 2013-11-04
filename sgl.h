@@ -29,6 +29,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 // C++ includes
 #include <initializer_list>
@@ -93,6 +94,16 @@ int64_t lcm(int64_t a, int64_t b) {
 * Returns 0 for platforms not yet supported.
 */
 size_t cache_line_size()  {
+#if defined(__linux__)
+    FILE * p = 0;
+    p = fopen("/sys/devices/system/cpu/cpu0/cache/index0/coherency_line_size", "r");
+    size_t i = 0;
+    if (p) {
+        fscanf(p, "%zd", &i);
+        fclose(p);
+    }
+    return i;
+#endif
 #if defined(_WIN32)
     static size_t memoized_size = 0;
     if (memoized_size) {
@@ -189,10 +200,10 @@ private:
  * Simple scoped pointers. Call delete and delete[] respectively.
  */
 template<typename T>
-class AutoDelete {
+class ScopedPtr {
     public:
-    AutoDelete(T* ptr) : m_ptr(ptr) {}
-    AutoDelete(const T* ptr) : m_ptr(ptr) {}
+    ScopedPtr(T* ptr) : m_ptr(ptr) {}
+    ScopedPtr(const T* ptr) : m_ptr(ptr) {}
 
     T& operator*() const { return *m_ptr; }
     T* operator->() const { return m_ptr; }
@@ -205,22 +216,22 @@ class AutoDelete {
         return detached;
     }
 private:
-    AutoDelete() {}
-    AutoDelete(T) {}
+    ScopedPtr() {}
+    ScopedPtr(T) {}
     T* m_ptr;
 
 public:
-    virtual ~AutoDelete() {
+    virtual ~ScopedPtr() {
         if (m_ptr) {
             delete m_ptr;
         }
     }
 };
 template<typename T>
-class AutoDeleteArray {
+class ScopedArray {
     public:
-    AutoDeleteArray(T* ptr) : m_ptr(ptr) {}
-    AutoDeleteArray(const T* ptr) : m_ptr(ptr) {}
+    ScopedArray(T* ptr) : m_ptr(ptr) {}
+    ScopedArray(const T* ptr) : m_ptr(ptr) {}
 
     T& operator*() const { return *m_ptr; }
     T* operator->() const { return m_ptr; }
@@ -233,11 +244,11 @@ class AutoDeleteArray {
         return detached;
     }
 private:
-    AutoDeleteArray() {}
-    AutoDeleteArray(T) {}
+    ScopedArray() {}
+    ScopedArray(T) {}
     T* m_ptr;
 public:
-    virtual ~AutoDeleteArray() {
+    virtual ~ScopedArray() {
         if (m_ptr) {
             delete[] m_ptr;
         }
@@ -351,7 +362,7 @@ public:
     String() : Vector<char>(1) {
         m_storage[0] = '\0';
     }
-    
+
     String(const char* str) : Vector(strlen(str) + 1) {
         memcpy(m_storage, str, strlen(str));
         m_num_elements = strlen(str);
@@ -361,7 +372,7 @@ public:
     String(const String& other) : Vector(other) { }
 
     String& operator= (const String& other) {
-        this->operator=(other);
+        return this->operator=(other);
     }
 
     String appended(const String& other) {
