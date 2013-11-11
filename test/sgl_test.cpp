@@ -36,7 +36,7 @@ void stress_stl_vector(int reserve, int times) {
 }
 
 void stress_sgl_vector(int reserve, int times) {
-    sgl::Vector<int> v(reserve);
+    sgl::Array<int> v(reserve);
 
     for(int i = 0; i < times; ++i) {
         v.push_back(i);
@@ -64,7 +64,7 @@ int main(int argc, char** argv)
     sgl_assert(cache_size);
     printf("cache line in bytes: %ld\n", cache_size);
 
-    sgl::Vector<int> v(1);
+    sgl::Array<int> v(1);
     for (int i = 0; i < 100; ++i) {
         v.push_back(i);
     }
@@ -109,12 +109,12 @@ int main(int argc, char** argv)
 #endif
 
     {
-        sgl::ScopedPtr<sgl::Vector<int>> ad(new sgl::Vector<int>(1));
+        sgl::ScopedPtr<sgl::Array<int>> ad(new sgl::Array<int>(1));
         ad->push_back(42);
         sgl_expect((*ad)[0] == 42);
     }
     {
-        sgl::Vector<int> init_list = { 0, 1, 2, 3 };
+        sgl::Array<int> init_list = { 0, 1, 2, 3 };
         for (const auto& e : init_list) {
             printf("%d\n", e);
         }
@@ -135,6 +135,7 @@ int main(int argc, char** argv)
         for (auto c : a) {
             printf("%c", c);
         }
+        printf("\n");
     }
 
     printf("Everything is cool after this.\n");

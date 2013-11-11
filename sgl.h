@@ -261,23 +261,23 @@ public:
 // Generic data structures
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * Vector class designed to be faster than std::vector
+ * Array class designed to be faster than std::vector
  * Windows: push_back is faster in general but really kicks ass as the size grows.
  */
 template <typename T>
-class Vector {
+class Array {
 public:
     /**
      * Allocates space for at least num elements.
      */
-    explicit Vector(size_t reserve) :
+    explicit Array(size_t reserve) :
         m_num_elements(0) {
         sgl_assert(reserve > 0);
         m_size = friendly_array_size(reserve);
         m_storage = new T[m_size];
     }
 
-    Vector(std::initializer_list<T> list) : m_num_elements(0) {
+    Array(std::initializer_list<T> list) : m_num_elements(0) {
         sgl_assert(list.size() > 0);
         m_size = friendly_array_size(list.size());
         m_storage = new T[m_size];
@@ -286,7 +286,7 @@ public:
         }
     }
 
-    Vector(const Vector<T>& other) {
+    Array(const Array<T>& other) {
         this->m_size = other.m_size;
         this->m_num_elements = other.m_num_elements;
         if (this->m_storage) {
@@ -316,7 +316,7 @@ public:
         m_storage[m_num_elements - 1] = e;
     }
 
-    Vector<T>& operator= (const Vector<T>& other) {
+    Array<T>& operator= (const Array<T>& other) {
         if (m_size < other.m_size) {
             if (m_storage) delete[] m_storage;
             m_storage = new T[other.m_size];
@@ -330,7 +330,7 @@ public:
         m_num_elements = num_elements;
     }
 
-    virtual ~Vector() {
+    virtual ~Array() {
         if (m_storage) {
             delete[] m_storage;
         }
@@ -351,25 +351,25 @@ protected:
     static size_t m_factor;  // How much do we resize the array when stretching.
 };
 template <typename T>
-size_t Vector<T>::m_factor = 2;
+size_t Array<T>::m_factor = 2;
 
 /**
  * Functional-style string class
  * I expect this to be really slow without heavy compiler help, and even then..
  */
-class String : public Vector<char> {
+class String : public Array<char> {
 public:
-    String() : Vector<char>(1) {
+    String() : Array<char>(1) {
         m_storage[0] = '\0';
     }
 
-    String(const char* str) : Vector(strlen(str) + 1) {
+    String(const char* str) : Array(strlen(str) + 1) {
         memcpy(m_storage, str, strlen(str));
         m_num_elements = strlen(str);
         m_storage[m_num_elements] = '\0';
     }
 
-    String(const String& other) : Vector(other) { }
+    String(const String& other) : Array(other) { }
 
     String& operator= (const String& other) {
         return this->operator=(other);
@@ -387,7 +387,7 @@ public:
         return m_storage;
     }
 private:
-    explicit String(size_t size) : Vector(size) { m_storage[0] = '\0'; }
+    explicit String(size_t size) : Array(size) { m_storage[0] = '\0'; }
 };
 
 }  // namespace sgl
