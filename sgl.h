@@ -38,6 +38,11 @@
 #include <windows.h>
 #endif
 
+#if defined(__linux__)
+#include <time.h>
+#include <unistd.h>
+#endif
+
 // I don't like double negations
 #ifndef NDEBUG
 #define SGL_DEBUG
@@ -127,6 +132,14 @@ size_t cache_line_size()  {
 #endif
 }
 
+long get_nanoseconds() {
+#if defined(__linux__)
+    struct timespec tp;
+    clock_gettime(CLOCK_REALTIME, &tp);
+    return tp.tv_nsec;
+#endif
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -145,13 +158,17 @@ private:
     Noncopyable& operator=(const Noncopyable&);
 };
 
-/**
- * Printable classes have a str method!
- */
-class Printable {
-    public:
-        virtual char* str() = 0;
-};
+////////////////////////////////////////////////////////////////////////////////
+// Output
+////////////////////////////////////////////////////////////////////////////////
+template<typename T>
+void dbg(const T& that) {
+    printf("%s", that.str());
+}
+template<typename T>
+void dbgln(const T& that) {
+    printf("%s\n", that.str());
+}
 
 /**
  * Class to avoid exceptions and prevent NULL usage.
@@ -200,7 +217,7 @@ private:
  * Simple scoped pointers. Call delete and delete[] respectively.
  */
 template<typename T>
-class ScopedPtr {
+class ScopedPtr : public Noncopyable {
     public:
     ScopedPtr(T* ptr) : m_ptr(ptr) {}
     ScopedPtr(const T* ptr) : m_ptr(ptr) {}
@@ -227,8 +244,9 @@ public:
         }
     }
 };
+
 template<typename T>
-class ScopedArray {
+class ScopedArray : public Noncopyable {
     public:
     ScopedArray(T* ptr) : m_ptr(ptr) {}
     ScopedArray(const T* ptr) : m_ptr(ptr) {}
@@ -307,7 +325,7 @@ public:
     void push_back(const T& e) {
         m_num_elements++;
         if (m_num_elements * sizeof(T) > m_size) {  // Stretch
-            m_size *= m_factor;
+            m_size *= 4;
             T* new_storage = new T[m_size];
             memcpy(new_storage, m_storage, (m_num_elements - 1) * sizeof(T));
             delete[] m_storage;
@@ -348,10 +366,7 @@ protected:
     T* m_storage;
     size_t m_num_elements;
     size_t m_size;
-    static size_t m_factor;  // How much do we resize the array when stretching.
 };
-template <typename T>
-size_t Array<T>::m_factor = 2;
 
 /**
  * Functional-style string class
@@ -394,3 +409,4 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 
 #endif  // SGL_H_DEFINED
+

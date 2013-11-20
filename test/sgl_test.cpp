@@ -21,9 +21,15 @@ int get_random_int() {
     QueryPerformanceCounter(&after); \
     printf("Measure " #expr ": %ld\n", after.QuadPart - before.QuadPart); \
 }
-#endif
+#elif defined(__linux__)
 #define BENCHMARK(expr) { \
+    long before, after;\
+    before = sgl::get_nanoseconds();\
+    (expr);\
+    after = sgl::get_nanoseconds();\
+    printf("Measure " #expr ": %ld\n", after - before); \
 }
+#endif
 
 void stress_stl_vector(int reserve, int times) {
     std::vector<int> v;
@@ -65,32 +71,14 @@ int main(int argc, char** argv)
     printf("cache line in bytes: %ld\n", cache_size);
 
     sgl::Array<int> v(1);
-    for (int i = 0; i < 100; ++i) {
+    for (int i = 0; i < 16; ++i) {
         v.push_back(i);
     }
     for (auto e : v) {
         printf("%d\n", e);
     }
 
-    int reserve = 1;
-    BENCHMARK(stress_stl_vector(reserve, 1));
-    BENCHMARK(stress_stl_vector(reserve, 2));
-    BENCHMARK(stress_stl_vector(reserve, 4));
-    BENCHMARK(stress_stl_vector(reserve, 8));
-    BENCHMARK(stress_stl_vector(reserve, 16));
-    BENCHMARK(stress_stl_vector(reserve, 32));
-    BENCHMARK(stress_stl_vector(reserve, 128));
-    BENCHMARK(stress_stl_vector(reserve, 256));
-    BENCHMARK(stress_stl_vector(reserve, 512));
-    BENCHMARK(stress_stl_vector(reserve, 1000));
-    BENCHMARK(stress_stl_vector(reserve, 4000));
-#if !defined(SGL_DEBUG)
-    BENCHMARK(stress_stl_vector(reserve, 16000));
-    BENCHMARK(stress_stl_vector(reserve, 100000));
-    BENCHMARK(stress_stl_vector(reserve, 200000));
-#endif
-
-    reserve = 1;
+    int reserve = 32;
     BENCHMARK(stress_sgl_vector(reserve, 1));
     BENCHMARK(stress_sgl_vector(reserve, 2));
     BENCHMARK(stress_sgl_vector(reserve, 4));
@@ -108,6 +96,24 @@ int main(int argc, char** argv)
     BENCHMARK(stress_sgl_vector(reserve, 200000));
 #endif
 
+    reserve = 32;
+    BENCHMARK(stress_stl_vector(reserve, 1));
+    BENCHMARK(stress_stl_vector(reserve, 2));
+    BENCHMARK(stress_stl_vector(reserve, 4));
+    BENCHMARK(stress_stl_vector(reserve, 8));
+    BENCHMARK(stress_stl_vector(reserve, 16));
+    BENCHMARK(stress_stl_vector(reserve, 32));
+    BENCHMARK(stress_stl_vector(reserve, 128));
+    BENCHMARK(stress_stl_vector(reserve, 256));
+    BENCHMARK(stress_stl_vector(reserve, 512));
+    BENCHMARK(stress_stl_vector(reserve, 1000));
+    BENCHMARK(stress_stl_vector(reserve, 4000));
+#if !defined(SGL_DEBUG)
+    BENCHMARK(stress_stl_vector(reserve, 16000));
+    BENCHMARK(stress_stl_vector(reserve, 100000));
+    BENCHMARK(stress_stl_vector(reserve, 200000));
+#endif
+
     {
         sgl::ScopedPtr<sgl::Array<int>> ad(new sgl::Array<int>(1));
         ad->push_back(42);
@@ -116,8 +122,9 @@ int main(int argc, char** argv)
     {
         sgl::Array<int> init_list = { 0, 1, 2, 3 };
         for (const auto& e : init_list) {
-            printf("%d\n", e);
+            printf("%d ", e);
         }
+        sgl::dbgln(sgl::String());
     }
 
     {
@@ -137,8 +144,15 @@ int main(int argc, char** argv)
         }
         printf("\n");
     }
+    {
+        sgl::String lol = "LOL";
+        for (int i = 0; i < 10; ++i) {
+            sgl::dbg(lol);
+        }
+        sgl::dbgln(lol);
+    }
 
-    printf("Everything is cool after this.\n");
+    printf("Done.\n");
 
 	return 0;
 }
