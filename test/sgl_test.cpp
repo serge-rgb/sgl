@@ -31,7 +31,7 @@ int get_random_int() {
 }
 #endif
 
-void stress_stl_vector(int reserve, int times) {
+void stress_stl_vector(size_t reserve, int times) {
     std::vector<int> v;
 
     if (reserve)  v.reserve(reserve);
@@ -41,7 +41,7 @@ void stress_stl_vector(int reserve, int times) {
     }
 }
 
-void stress_sgl_vector(int reserve, int times) {
+void stress_sgl_vector(size_t reserve, int times) {
     sgl::Array<int> v(reserve);
 
     for(int i = 0; i < times; ++i) {
@@ -52,7 +52,7 @@ void stress_sgl_vector(int reserve, int times) {
 #if defined(_WIN32)
 int _tmain(int argc, _TCHAR* argv[])
 #else
-int main(int argc, char** argv)
+int main()
 #endif
 {
     printf("Hello World\n");
@@ -78,7 +78,7 @@ int main(int argc, char** argv)
         printf("%d\n", e);
     }
 
-    int reserve = 32;
+    size_t reserve = 32;
     BENCHMARK(stress_sgl_vector(reserve, 1));
     BENCHMARK(stress_sgl_vector(reserve, 2));
     BENCHMARK(stress_sgl_vector(reserve, 4));
@@ -133,16 +133,21 @@ int main(int argc, char** argv)
     }
     {
         sgl::String s = "Hello World!";
+        sgl::String r = s;
         printf("Hello string: [%s]\n", s.str());
+        printf("Hello string copy: [%s]\n", r.str());
+        r = s;
+        printf("Hello string copy again: [%s]\n", r.str());
     }
 
     {
         sgl::String a = sgl::String("Hello, ").appended("appended World!");
         printf("%s\n", a.str());
+        printf("----- char per char: ----\n");
         for (auto c : a) {
             printf("%c", c);
         }
-        printf("\n");
+        printf("\n----\n");
     }
     {
         sgl::String lol = "LOL";
@@ -151,6 +156,12 @@ int main(int argc, char** argv)
         }
         sgl::dbgln(lol);
     }
+
+    sgl::String a = "Adios";
+    sgl::String b = "Mundo\n";
+    sgl::dbg({a,b});
+    sgl::String c = "Cruel";
+    sgl::dbgln({c, c, c});
 
     printf("Done.\n");
 

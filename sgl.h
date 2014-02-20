@@ -44,8 +44,10 @@
 #endif
 
 // I don't like double negations
+#ifndef SGL_DEBUG
 #ifndef NDEBUG
 #define SGL_DEBUG
+#endif
 #endif
 
 #ifdef SGL_DEBUG
@@ -165,9 +167,27 @@ template<typename T>
 void dbg(const T& that) {
     printf("%s", that.str());
 }
+
+template<typename T>
+void dbg(const std::initializer_list<T>& list) {
+    for(auto it = list.begin(); it != list.end(); it++) {
+        dbg(*it);
+        if(it != list.end() - 1) {
+            printf(" ");
+        }
+    }
+}
+
 template<typename T>
 void dbgln(const T& that) {
     printf("%s\n", that.str());
+}
+
+template<typename T>
+void dbgln(const std::initializer_list<T>& list) {
+    for(const auto& e: list) {
+        dbgln(e);
+    }
 }
 
 /**
@@ -307,9 +327,6 @@ public:
     Array(const Array<T>& other) {
         this->m_size = other.m_size;
         this->m_num_elements = other.m_num_elements;
-        if (this->m_storage) {
-            delete m_storage;
-        }
         this->m_storage = new T[m_size];
         memcpy(m_storage, other.m_storage, other.m_size);
     }
@@ -341,6 +358,7 @@ public:
         }
         memcpy(m_storage, other.m_storage, other.m_size);
         m_size = other.m_size;
+        return *this;
     }
 
     void resize(size_t num_elements) {
@@ -348,7 +366,9 @@ public:
         m_num_elements = num_elements;
     }
 
-    virtual ~Array() {
+    // Not virtual to avoid vtables. Assuming String is the only subclass.
+    // and that compilers will call this (not in spec.)
+    ~Array() {
         if (m_storage) {
             delete[] m_storage;
         }
@@ -384,12 +404,6 @@ public:
         m_storage[m_num_elements] = '\0';
     }
 
-    String(const String& other) : Array(other) { }
-
-    String& operator= (const String& other) {
-        return this->operator=(other);
-    }
-
     String appended(const String& other) {
         const size_t new_storage = this->m_num_elements + other.m_num_elements;
         String new_string(new_storage);
@@ -401,6 +415,7 @@ public:
     const char* str() const {
         return m_storage;
     }
+
 private:
     explicit String(size_t size) : Array(size) { m_storage[0] = '\0'; }
 };
