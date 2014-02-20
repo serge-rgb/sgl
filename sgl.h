@@ -342,7 +342,7 @@ public:
     void push_back(const T& e) {
         m_num_elements++;
         if (m_num_elements * sizeof(T) > m_size) {  // Stretch
-            m_size *= 4;
+            m_size *= 2;
             T* new_storage = new T[m_size];
             memcpy(new_storage, m_storage, (m_num_elements - 1) * sizeof(T));
             delete[] m_storage;

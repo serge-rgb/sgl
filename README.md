@@ -10,9 +10,10 @@ Feature list
 * Stretchy array (substitute for std::vector)
 * Scoped pointer
 * String class
-* 
-### Planned features.
+*
+### Planned features:
 
+* Hashmap
 * Modern OpenGL helpers (It would be nice to draw a triangle to the screen using less than 1000 lines)
 * Refcounted pointer
 
