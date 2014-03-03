@@ -21,7 +21,7 @@ int get_random_int() {
     QueryPerformanceCounter(&after); \
     printf("Measure " #expr ": %ld\n", after.QuadPart - before.QuadPart); \
 }
-#elif defined(__linux__)
+#elif defined(__linux__) || defined(__MACH__)
 #define BENCHMARK(expr) { \
     long before, after;\
     before = sgl::get_nanoseconds();\

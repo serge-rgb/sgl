@@ -30,18 +30,21 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef __MACH__
+#include <mach/clock.h>
+#include <mach/mach.h>
+#endif
+#if defined(_WIN32)
+#include <windows.h>
+#endif
+#if defined(__linux__) || defined(__MACH__)
+#include <sys/time.h>
+#include <unistd.h>
+#endif
 
 // C++ includes
 #include <initializer_list>
 
-#if defined(_WIN32)
-#include <windows.h>
-#endif
-
-#if defined(__linux__)
-#include <time.h>
-#include <unistd.h>
-#endif
 
 // I don't like double negations
 #ifndef SGL_DEBUG
@@ -110,8 +113,7 @@ size_t cache_line_size()  {
         fclose(p);
     }
     return i;
-#endif
-#if defined(_WIN32)
+#elif defined(_WIN32)
     static size_t memoized_size = 0;
     if (memoized_size) {
         return memoized_size;
@@ -131,13 +133,28 @@ size_t cache_line_size()  {
     free(buffer);
     memoized_size = size;
     return size;
+#elif defined(__MACH__)
+    return 64;  // What could possibly go wrong?
+#else
+    return 0;
 #endif
+
 }
 
 long get_nanoseconds() {
 #if defined(__linux__)
     struct timespec tp;
     clock_gettime(CLOCK_REALTIME, &tp);
+    return tp.tv_nsec;
+#elif defined(__MACH__)
+    struct timespec tp;
+    clock_serv_t cclock;
+    mach_timespec_t mts;
+    host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock);
+    clock_get_time(cclock, &mts);
+    mach_port_deallocate(mach_task_self(), cclock);
+    tp.tv_sec = mts.tv_sec;
+    tp.tv_nsec = mts.tv_nsec;
     return tp.tv_nsec;
 #endif
 }
