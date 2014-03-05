@@ -10,7 +10,7 @@ Feature list
 * Stretchy array (substitute for std::vector)
 * Scoped pointer
 * String class
-*
+
 ### Planned features:
 
 * Hashmap
