@@ -163,6 +163,18 @@ int main()
     sgl::String c = "Cruel";
     sgl::dbgln({c, c, c});
 
+    {
+        sgl::Dict<sgl::String, int> dict;
+        sgl::String key = sgl::String("hola dict");
+        sgl::String key2 = sgl::String("hola dict 2");
+        dict.insert(key, 42);
+        dict.insert(key2, 43);
+        auto found = dict.find(key);
+        printf("%d\n", found);
+        found = dict.find(key2);
+        printf("%d\n", found);
+    }
+
     printf("Done.\n");
 
 	return 0;

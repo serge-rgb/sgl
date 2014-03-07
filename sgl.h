@@ -368,6 +368,10 @@ public:
         m_storage[m_num_elements - 1] = e;
     }
 
+    size_t size() const {
+        return m_size;
+    }
+
     Array<T>& operator= (const Array<T>& other) {
         if (m_size < other.m_size) {
             if (m_storage) delete[] m_storage;
@@ -437,7 +441,47 @@ private:
     explicit String(size_t size) : Array(size) { m_storage[0] = '\0'; }
 };
 
+/**
+ * djb2 hashing
+ */
+static inline uint64_t djb2(char* data, size_t size) {
+    char* ptr = data;
+    uint64_t hash = 5381;
+    for(size_t i=0; i < size; ++i) {
+        hash = (hash * 33) ^ (uint64_t)ptr++;
+    }
+    return hash;
+}
+
+template<typename KeyT, typename ValT>
+class Dict {
+public:
+    Dict() : m_data(64), m_mark(64) {}
+
+    void insert(const KeyT& key, const ValT& val) {
+        printf("insert hash: %llu\n", (uint64_t)&key);
+        auto hash = djb2((char*)&key, sizeof(KeyT)) % m_data.size();
+        printf("insert hash: %llu\n", hash);
+        if (m_mark[hash]) {
+            fprintf(stderr, "COLLISION\n");
+        }
+        m_data[hash] = val;
+        m_mark[hash] = true;
+    }
+
+    ValT find(const KeyT& key) {
+        return m_data[djb2((char*)&key, sizeof(KeyT)) % m_data.size()];
+    }
+
+private:
+    Array<ValT> m_data;
+    Array<bool> m_mark;
+};
+
 }  // namespace sgl
+
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #endif  // SGL_H_DEFINED
