@@ -368,17 +368,17 @@ public:
         m_storage[m_num_elements - 1] = e;
     }
 
-    size_t size() const {
-        return m_size;
+    size_t num_elements() const {
+        return m_num_elements;
     }
 
     Array<T>& operator= (const Array<T>& other) {
         if (m_size < other.m_size) {
             if (m_storage) delete[] m_storage;
             m_storage = new T[other.m_size];
+            m_size = other.m_size;
         }
         memcpy(m_storage, other.m_storage, other.m_size);
-        m_size = other.m_size;
         return *this;
     }
 
@@ -444,42 +444,67 @@ private:
 /**
  * djb2 hashing
  */
-static inline uint64_t djb2(char* data, size_t size) {
-    char* ptr = data;
+static inline uint64_t djb2(char* data) {
     uint64_t hash = 5381;
-    for(size_t i=0; i < size; ++i) {
-        hash = (hash * 33) ^ (uint64_t)ptr++;
+    while (*data != '\0') {
+        hash = (hash * 33) ^ (uint64_t)data;
+        ++data;
     }
     return hash;
 }
 
-template<typename KeyT, typename ValT>
+template<typename ValT>
 class Dict {
-public:
-    Dict() : m_data(64), m_mark(64) {}
+private:
+    struct Field {
+        /* MSB: Bit describing if field is taken.
+         * 63-bit hash for the key.*/
+        uint64_t descr;
+        ValT data;
+    };
 
-    void insert(const KeyT& key, const ValT& val) {
-        printf("insert hash: %llu\n", (uint64_t)&key);
-        auto hash = djb2((char*)&key, sizeof(KeyT)) % m_data.size();
-        printf("insert hash: %llu\n", hash);
-        if (m_mark[hash]) {
-            fprintf(stderr, "COLLISION\n");
+public:
+    Dict() : m_dict_size(64), m_fields(m_dict_size) {
+        for(size_t i = 0; i < m_dict_size; ++i) {
+            m_fields.push_back({0, ValT()});
         }
-        m_data[hash] = val;
-        m_mark[hash] = true;
     }
 
-    ValT find(const KeyT& key) {
-        return m_data[djb2((char*)&key, sizeof(KeyT)) % m_data.size()];
+    void insert(const String& key, const ValT& val) {
+        printf("insert hash: %s\n", key.str());
+        const auto long_hash = djb2((char*)key.str());
+        const auto hash = long_hash % m_fields.num_elements();
+        const auto descr = long_hash | (uint64_t(1) << 63);
+        printf("insert hash: %llu %llu %llu\n", long_hash, descr, hash);
+        auto free_hash = hash;
+        while (m_fields[free_hash].descr >> 63) {
+            fprintf(stderr, "COLLISION %llu\n", hash);
+            free_hash = (free_hash + 1) % m_dict_size;
+            if (free_hash == hash) {
+                fprintf(stderr, "Houston, we have a problem.\n");
+                exit(EXIT_FAILURE);
+            }
+        }
+        printf("descr: %llu %llu\n", descr >> 63, descr);
+        m_fields[free_hash] = {descr, val};
+    }
+
+    ValT find(String& key) {
+        auto long_hash = djb2((char*)key.str());
+        auto hash = long_hash % m_fields.num_elements();
+        auto descr = long_hash | (uint64_t(1) << 63);
+        while (m_fields[hash].descr != descr) {
+            hash = (hash + 1) % m_fields.num_elements();
+        }
+        return m_fields[hash].data;
     }
 
 private:
-    Array<ValT> m_data;
-    Array<bool> m_mark;
+    size_t m_dict_size;
+    Array<Field> m_fields;
 };
 
 }  // namespace sgl
-
 
 
 ////////////////////////////////////////////////////////////////////////////////

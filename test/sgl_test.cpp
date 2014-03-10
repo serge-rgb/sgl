@@ -164,15 +164,18 @@ int main()
     sgl::dbgln({c, c, c});
 
     {
-        sgl::Dict<sgl::String, int> dict;
+        sgl::Dict<int> dict;
         sgl::String key = sgl::String("hola dict");
-        sgl::String key2 = sgl::String("hola dict 2");
+        sgl::String key2 = sgl::String("hola dict asdfa");
         dict.insert(key, 42);
         dict.insert(key2, 43);
         auto found = dict.find(key);
-        printf("%d\n", found);
+        printf("found elem %d\n", found);
         found = dict.find(key2);
-        printf("%d\n", found);
+        printf("found elem %d\n", found);
+    }
+    { // TODO: pideon hole principle
+
     }
 
     printf("Done.\n");
