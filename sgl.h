@@ -28,6 +28,7 @@
 // C includes
 #include <stdio.h>
 #include <stdint.h>
+#include <inttypes.h>
 #include <stdlib.h>
 #include <string.h>
 #ifdef __MACH__
@@ -478,17 +479,17 @@ public:
         const auto long_hash = djb2((char*)key.str());
         const auto hash = long_hash % m_fields.num_elements();
         const auto descr = long_hash | (uint64_t(1) << 63);
-        printf("insert hash: %llu %llu %llu\n", long_hash, descr, hash);
+        printf("insert hash: %lu %lu %lu\n", long_hash, descr, hash);
         auto free_hash = hash;
         while (m_fields[free_hash].descr >> 63) {
-            fprintf(stderr, "COLLISION %llu\n", hash);
+            fprintf(stderr, "COLLISION %lu\n", hash);
             free_hash = (free_hash + 1) % m_dict_size;
             if (free_hash == hash) {
                 fprintf(stderr, "Houston, we have a problem.\n");
                 exit(EXIT_FAILURE);
             }
         }
-        printf("descr: %llu %llu\n", descr >> 63, descr);
+        printf("descr: %lu %lu\n", descr >> 63, descr);
         m_fields[free_hash] = {descr, val};
     }
 
