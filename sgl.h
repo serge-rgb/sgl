@@ -33,12 +33,15 @@
 #ifdef __MACH__
 #include <mach/clock.h>
 #include <mach/mach.h>
+#include <sys/time.h>
 #endif
 #if defined(_WIN32)
 #include <windows.h>
 #endif
+#if defined(__linux__)
+#include<time.h>
+#endif
 #if defined(__linux__) || defined(__MACH__)
-#include <sys/time.h>
 #include <unistd.h>
 #endif
 
