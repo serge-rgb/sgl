@@ -355,6 +355,7 @@ public:
             if (m_storage) delete[] m_storage;
             m_storage = new T[other.m_size];
             m_size = other.m_size;
+            m_num_elements = other.m_num_elements;
         }
         memcpy(m_storage, other.m_storage, other.m_size);
         return *this;
@@ -425,7 +426,7 @@ private:
 static inline uint64_t djb2(char* data) {
     uint64_t hash = 5381;
     while (*data != '\0') {
-        hash = (hash * 33) ^ (uint64_t)data;
+        hash = (hash * 33) ^ (uint64_t)(*data);
         ++data;
     }
     return hash;
@@ -434,6 +435,7 @@ static inline uint64_t djb2(char* data) {
 template<typename ValT>
 class Dict {
 private:
+    static const uint64_t default_size = 32;
     struct Field {
         /* MSB: Bit describing if field is taken.
          * 63-bit hash for the key.*/
@@ -442,39 +444,79 @@ private:
     };
 
 public:
-    Dict() : m_dict_size(64), m_fields(m_dict_size) {
+    explicit Dict(uint64_t size) : m_dict_size(size), m_fields(size) {
         for(size_t i = 0; i < m_dict_size; ++i) {
             m_fields.push_back({0, ValT()});
         }
     }
+    Dict() : Dict(64) { }
 
     void insert(const String& key, const ValT& val) {
-        printf("insert hash: %s\n", key.str());
-        const auto long_hash = djb2((char*)key.str());
-        const auto hash = long_hash % m_fields.num_elements();
-        const auto descr = long_hash | (uint64_t(1) << 63);
-        printf("insert hash: %lu %lu %lu\n", long_hash, descr, hash);
-        auto free_hash = hash;
-        while (m_fields[free_hash].descr >> 63) {
-            fprintf(stderr, "COLLISION %lu\n", hash);
-            free_hash = (free_hash + 1) % m_dict_size;
-            if (free_hash == hash) {
-                fprintf(stderr, "Houston, we have a problem.\n");
-                exit(EXIT_FAILURE);
-            }
+        const auto very_long_hash = djb2((char*)key.str());
+        const uint64_t descr = very_long_hash | (uint64_t(1) << 63);
+        if (insert(descr, val) == -1) {
+            fprintf(stderr, "ERROR: ==== Dict error: Duplicate key %s\n", key.str());
         }
-        printf("descr: %lu %lu\n", descr >> 63, descr);
-        m_fields[free_hash] = {descr, val};
     }
 
-    ValT find(String& key) {
-        auto long_hash = djb2((char*)key.str());
+    int insert(const uint64_t descr, const ValT& val) {
+        // Check that description is OK.
+        for(const auto& field : m_fields) {
+            if (field.descr == descr) {
+                return -1;
+            }
+        }
+        const auto long_hash = (uint64_t(1) << 63) ^ descr;
+        const auto hash = long_hash % m_fields.num_elements();
+        auto free_hash = hash;
+        while (m_fields[free_hash].descr >> 63) {
+            free_hash = (free_hash + 1) % m_dict_size;
+            if (free_hash == hash) {
+                // Resize our buffer
+                m_dict_size *= 2;
+                Array<Field> new_storage(m_dict_size);
+                for (size_t i = 0; i < m_dict_size; ++i) {
+                    new_storage.push_back({0, ValT()});
+                }
+                auto old_storage = m_fields;
+                m_fields = new_storage;
+
+                // Re-hash and re-insert
+                for (size_t i = 0; i < old_storage.num_elements(); ++i) {
+                    const uint64_t descr_i = old_storage[i].descr;
+                    if ((descr_i >> 63)) {
+                        insert(descr_i, old_storage[i].data);  // Re-insert
+                    }
+                }
+                free_hash = hash;
+            }
+        }
+        m_fields[free_hash] = {descr, val};
+        return 0;
+    }
+
+    void print_debug_info() {
+        printf("---------------Dict debug ------\n");
+        for (size_t i = 0; i < m_fields.num_elements(); ++i) {
+            auto field = m_fields[i];
+            printf("Field %lu, %lu, %d\n", i, field.descr, field.data);
+        }
+        printf("-------------------------\n");
+    }
+
+    Maybe<ValT> find(const String& key) {
+        const auto very_long_hash = djb2((char*)key.str());
+        const auto descr = very_long_hash | (uint64_t(1) << 63);
+        const auto long_hash = (uint64_t(1) << 63) ^ descr;
         auto hash = long_hash % m_fields.num_elements();
-        auto descr = long_hash | (uint64_t(1) << 63);
+        const auto start = hash;
         while (m_fields[hash].descr != descr) {
             hash = (hash + 1) % m_fields.num_elements();
+            if (start == hash) {
+                return Maybe<ValT>();
+            }
         }
-        return m_fields[hash].data;
+        return Maybe<ValT>(m_fields[hash].data);
     }
 
 private:

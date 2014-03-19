@@ -155,13 +155,46 @@ int main()
         sgl::String key2 = sgl::String("hola dict asdfa");
         dict.insert(key, 42);
         dict.insert(key2, 43);
-        auto found = dict.find(key);
+        auto found = dict.find(key).value();
         printf("found elem %d\n", found);
-        found = dict.find(key2);
+        found = dict.find(key2).value();
         printf("found elem %d\n", found);
     }
     { // TODO: pideon hole principle
-
+        printf("========== Collision test\n");
+        sgl::Dict<int> dict(3);
+        dict.insert(sgl::String("1"), 1);
+        dict.print_debug_info();
+        dict.insert(sgl::String("2"), 2);
+        dict.print_debug_info();
+        dict.insert(sgl::String("3"), 3);
+        dict.print_debug_info();
+        dict.insert(sgl::String("4"), 4);
+        dict.print_debug_info();
+        dict.insert(sgl::String("5"), 5);
+        dict.print_debug_info();
+        dict.insert(sgl::String("6"), 6);
+        dict.print_debug_info();
+        dict.insert(sgl::String("7"), 7);
+        dict.print_debug_info();
+        dict.insert(sgl::String("8"), 8);
+        dict.print_debug_info();
+        dict.insert(sgl::String("9"), 9);
+        dict.print_debug_info();
+        printf("\t\tEXPECTING AN ERROR HERE:\n");
+        dict.insert(sgl::String("9"), 10);
+        for (int i = 1; i <= 10; ++i) {
+            char *str = (char*)malloc(2);
+            memset(str, 0, 2);
+            sprintf(str, "%d", i);
+            if (i < 10) {
+                sgl_expect(dict.find(sgl::String(str)).valid());
+                sgl_expect(dict.find(sgl::String(str)).value() == i);
+            } else {
+                sgl_expect(!dict.find(sgl::String(str)).valid());
+            }
+            free(str);
+        }
     }
 
     printf("Done.\n");
