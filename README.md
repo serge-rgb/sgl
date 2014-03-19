@@ -5,22 +5,21 @@ This is my own C++ standard library. MIT licensed. Things may explode.
 
 Feature list
 ------------
-* NonCopyable base class.
 * `Maybe<T>`, my small nod to haskell's sexy type system.
-* Stretchy array (substitute for std::vector)
-* Scoped pointer
-* String class
+* `Array<T>`Stretchy array (substitute for std::vector)
+* `ScopedPtr` and `ScopedArray` Smartish pointers (substitute for std::unique_ptr)
+* `String` class. Doesn't do much yet!
+* `Dict<T>` Dictionary (Map strings to keys of any type.)
 
 ### Planned features:
 
-* Hashmap
 * Modern OpenGL helpers (It would be nice to draw a triangle to the screen using less than 1000 lines)
 * Refcounted pointer
 
 Purposes
 --------
 1. Avoid the stl.
-2. Provide common functionality for the kind of coding that I do (Graphics, at the moment).
+2. Provide common functionality for the kind of coding that I do.
 
 Motivations
 -----------
