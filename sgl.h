@@ -499,7 +499,11 @@ public:
         printf("---------------Dict debug ------\n");
         for (size_t i = 0; i < m_fields.num_elements(); ++i) {
             auto field = m_fields[i];
+#if !defined(__MACH__)
             printf("Field %lu, %lu, %d\n", i, field.descr, field.data);
+#else 
+            printf("Field %zu, %llu, %d\n", i, field.descr, field.data);
+#endif
         }
         printf("-------------------------\n");
     }
