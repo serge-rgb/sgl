@@ -84,20 +84,6 @@ if (!(expr)) { \
 namespace sgl {
 
 ////////////////////////////////////////////////////////////////////////////////
-// Math functions.
-////////////////////////////////////////////////////////////////////////////////
-
-int64_t gcd(int64_t a, int64_t b) {
-    sgl_assert(!((a == 0) && (b == 0)));
-    if (a == 0) return b;
-    return gcd(b%a, a);
-}
-
-int64_t lcm(int64_t a, int64_t b) {
-    return a * b / gcd(a, b);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
 // Processor info
@@ -196,18 +182,6 @@ void dbg(const std::initializer_list<T>& list) {
         if(it != list.end() - 1) {
             printf(" ");
         }
-    }
-}
-
-template<typename T>
-void dbgln(const T& that) {
-    printf("%s\n", that.str());
-}
-
-template<typename T>
-void dbgln(const std::initializer_list<T>& list) {
-    for(const auto& e: list) {
-        dbgln(e);
     }
 }
 

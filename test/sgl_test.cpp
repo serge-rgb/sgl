@@ -124,7 +124,6 @@ int main()
         for (const auto& e : init_list) {
             printf("%d ", e);
         }
-        sgl::dbgln(sgl::String());
     }
 
     {
@@ -149,19 +148,6 @@ int main()
         }
         printf("\n----\n");
     }
-    {
-        sgl::String lol = "LOL";
-        for (int i = 0; i < 10; ++i) {
-            sgl::dbg(lol);
-        }
-        sgl::dbgln(lol);
-    }
-
-    sgl::String a = "Adios";
-    sgl::String b = "Mundo\n";
-    sgl::dbg({a,b});
-    sgl::String c = "Cruel";
-    sgl::dbgln({c, c, c});
 
     {
         sgl::Dict<int> dict;
@@ -182,3 +168,4 @@ int main()
 
 	return 0;
 }
+
