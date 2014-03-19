@@ -12,6 +12,10 @@
 *.la
 *.a
 
+#CMake shit
+CMakeFiles*
+CmakeCache*
+
 test/Release/*
 test/Debug/*
 *.opensdf
@@ -20,3 +24,6 @@ test/Debug/*
 *.filters
 *.user
 *.suo
+
+
+
