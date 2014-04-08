@@ -320,9 +320,9 @@ public:
     }
 
     Array(const Array<T>& other) {
-        this->m_size = other.m_size;
+        this->m_size         = other.m_size;
         this->m_num_elements = other.m_num_elements;
-        this->m_storage = new T[m_size];
+        this->m_storage      = new T[m_size];
         memcpy(m_storage, other.m_storage, other.m_size);
     }
 
@@ -352,9 +352,11 @@ public:
 
     Array<T>& operator= (const Array<T>& other) {
         if (m_size < other.m_size) {
-            if (m_storage) delete[] m_storage;
-            m_storage = new T[other.m_size];
-            m_size = other.m_size;
+            if (m_storage) {
+                delete[] m_storage;
+            }
+            m_storage      = new T[other.m_size];
+            m_size         = other.m_size;
             m_num_elements = other.m_num_elements;
         }
         memcpy(m_storage, other.m_storage, other.m_size);
@@ -383,9 +385,10 @@ protected:
         // line_size * ceil(min_num * type_size / line_size)
         return line_size * (1 + (((min_num * type_size) - 1) / line_size));
     }
-    T* m_storage;
-    size_t m_num_elements;
-    size_t m_size;
+
+    T*       m_storage;
+    size_t   m_num_elements;
+    size_t   m_size;
 };
 
 /**
@@ -478,11 +481,13 @@ public:
                 for (size_t i = 0; i < m_dict_size; ++i) {
                     new_storage.push_back({0, ValT()});
                 }
-                auto old_storage = m_fields;
-                m_fields = new_storage;
+
+                auto* old_storage     = &m_fields[0];
+                auto old_num_elements = m_fields.num_elements();
+                m_fields              = new_storage;
 
                 // Re-hash and re-insert
-                for (size_t i = 0; i < old_storage.num_elements(); ++i) {
+                for (size_t i = 0; i < old_num_elements; ++i) {
                     const uint64_t descr_i = old_storage[i].descr;
                     if ((descr_i >> 63)) {
                         insert(descr_i, old_storage[i].data);  // Re-insert
@@ -501,7 +506,7 @@ public:
             auto field = m_fields[i];
 #if !defined(__MACH__)
             printf("Field %lu, %lu, %d\n", i, field.descr, field.data);
-#else 
+#else
             printf("Field %zu, %llu, %d\n", i, field.descr, field.data);
 #endif
         }
