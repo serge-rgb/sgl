@@ -346,6 +346,10 @@ public:
         m_storage[m_num_elements - 1] = e;
     }
 
+    T* ptr() const {
+        return m_storage;
+    }
+
     size_t num_elements() const {
         return m_num_elements;
     }
